@@ -1,4 +1,4 @@
-.686
+  .686
 .model flat, stdcall
 option casemap:none
 
@@ -17,6 +17,7 @@ include \masm32\macros\macros.asm
     consoleCount dd 0 ; Variavel para armazenar caracteres lidos/escritos na console
     fileName db 20 dup(0)
     filePrint db "Arquivo de entrada:", 0
+    printInfo db "Digite um valor para x, y, largura e altura respectivamente: ", 0
     readHandle dd 0
     fileHandle dd 0
     headerBuffer db 54 dup(0)
@@ -29,14 +30,53 @@ include \masm32\macros\macros.asm
     newFile db 20 dup(0)
     newFilePrint db "Nome do arquivo novo:", 0 
     writeCount dd 0
-    coordinateX SDWORD 0
-    coordinateY SDWORD 0
-    value dd 0
-    aux dd 0
     widthInput dd 0
     heightInput dd 0
+    x SDWORD 0
+    y SDWORD 0
+    value dd 0
+    aux dd 0
 
 .code
+    censor:
+        push ebp
+        mov ebp, esp
+
+        ; Par�metros:
+        ; ebp+8: Endere�o do array que cont�m os bytes da linha da imagem
+        ; ebp+12: Coordenada X inicial
+        ; ebp+16: Largura da censura
+
+        push esi
+        push edi
+        push ecx
+
+        mov esi, [ebp + 8]  ; Endere�o do array
+        mov edi, [ebp + 12] ; Coordenada X inicial
+        mov ecx, [ebp + 16] ; Largura da censura
+
+        censor_loop:
+            ; Verificar se atingimos o fim da largura
+            cmp edi, ecx
+            jae censor_done
+
+            ; Preencher com a cor preta (0, 0, 0) no padr�o RGB
+            mov byte ptr [esi + edi], 0   ; Componente Azul (Blue)
+            mov byte ptr [esi + edi + 1], 0 ; Componente Verde (Green)
+            mov byte ptr [esi + edi + 2], 0 ; Componente Vermelho (Red)
+
+            ; Avan�ar para o pr�ximo pixel
+            add edi, 3
+            jmp censor_loop
+
+        censor_done:
+        pop ecx
+        pop edi
+        pop esi
+
+        pop ebp
+        ret
+        
 start:
     invoke GetStdHandle, STD_INPUT_HANDLE
     mov inputHandle, eax
@@ -46,6 +86,13 @@ start:
     ;;; Pede para inserir o nome do arquivo de entrada ;;;
     invoke WriteConsole, outputHandle, addr filePrint, 20, addr consoleCount, NULL
     invoke ReadConsole, inputHandle, addr fileName, sizeof fileName, addr consoleCount, NULL
+
+    ;;; Pede a entrada do x,y, width e heigth
+    invoke WriteConsole, outputHandle, addr printInfo, 62, addr consoleCount, NULL
+    invoke ReadConsole, inputHandle, addr x, sizeof x, addr consoleCount, NULL
+    invoke ReadConsole, inputHandle, addr y, sizeof y, addr consoleCount, NULL
+    invoke ReadConsole, inputHandle, addr widthInput, sizeof widthInput, addr consoleCount, NULL
+    invoke ReadConsole, inputHandle, addr heightInput, sizeof heightInput, addr consoleCount, NULL
     
     mov esi, offset fileName ; Armazenar apontador da string em esi
 proximo1:
@@ -87,25 +134,37 @@ proximo2:
     invoke WriteFile, writeHandle, addr widthImg, 4, addr writeCount, NULL
     invoke WriteFile, writeHandle, addr finalHeader, 32, addr writeCount, NULL
 
-    mov eax, 900
+    mov eax, widthImg
     imul eax, 3
-    mov aux, eax ; ECX ser? nosso contador
+    mov aux, eax
+    add y, heightInput
     
 read_write_loop:
-
-    ; Verificar se terminamos de processar todas as linhas
-    cmp readCount, 0
-    je end_loop
-
     ; Ler uma linha da imagem
     invoke ReadFile, fileHandle, addr lineImg, aux, addr readCount, NULL
+    ; Verificar se terminamos de processar todas as linhas
+    cmp y, 0
+    je read_final
+    push widthInput
+    push x 
+    push offset lineImg
+    call censor
+    pop offset lineImg
+    pop x
+    pop widthInput
     ; Escrever a linha lida no arquivo de destino
     invoke WriteFile, writeHandle, addr lineImg, aux, addr writeCount, NULL
-
+    dec y
     jmp read_write_loop
 
-end_loop:
-    
+read_final:
+        cmp readCount, 0
+        je exit_program
+        invoke ReadFile, fileHandle, addr lineImg, aux, addr readCount, NULL
+        invoke WriteFile, writeHandle, addr lineImg, aux, addr writeCount, NULL
+        jmp read_final
+        
+exit_program:    
     invoke CloseHandle, fileHandle
     invoke CloseHandle, writeHandle
     invoke ExitProcess, 0
