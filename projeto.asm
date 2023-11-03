@@ -1,4 +1,4 @@
-  .686
+.686
 .model flat, stdcall
 option casemap:none
 
@@ -37,7 +37,8 @@ include \masm32\macros\macros.asm
     value dd 0
     aux dd 0
     widthFinal dd 0
-    k dd 0
+    countY dd 0
+    countX dd 0
 
 .code
     ;censor:
@@ -98,45 +99,51 @@ proximo2:
     invoke WriteFile, writeHandle, addr eighteenBytes, 18, addr writeCount, NULL
     invoke WriteFile, writeHandle, addr widthImg, 4, addr writeCount, NULL
     invoke WriteFile, writeHandle, addr finalHeader, 32, addr writeCount, NULL
-
+    
     mov eax, 3
     mul widthImg
     mov aux, eax
-    ;mov eax, x
-    ;mov k, eax
-    ;mov ecx, x
-    ;add ecx, widthInput
-    ;invoke WriteConsole, outputHandle, ecx, 4, addr consoleCount, NULL
+    mov countY, 0
+    mov countX, 750
+    ;invoke WriteConsole, outputHandle, addr x, 4, addr consoleCount, NULL
     ;invoke WriteConsole, outputHandle, addr y, 4, addr consoleCount, NULL
-    mov y, 310
+    ;invoke WriteConsole, outputHandle, addr widthInput, 4, addr consoleCount, NULL
+    ;invoke WriteConsole, outputHandle, addr heightInput, 4, addr consoleCount, NULL
+    ;invoke WriteConsole, outputHandle, addr countY, 4, addr consoleCount, NULL
 
 read_write_loop:
-    
-    cmp y, 340
-    je read_final
     ; Ler uma linha da imagem
     invoke ReadFile, fileHandle, addr lineImg, aux, addr readCount, NULL
-    ;mov edx, k
-    ;invoke WriteConsole, outputHandle, addr fileName, sizeof fileName, addr consoleCount, NULL
-    mov x, 250
-    add y, 1
-    jmp censor
+    cmp countY, 310
+    je censor
+    invoke WriteFile, writeHandle, addr lineImg, aux, addr writeCount, NULL
+    add countY, 1
+    jmp read_write_loop
 
 write_file:
     ; Escrever a linha lida no arquivo de destino
     invoke WriteFile, writeHandle, addr lineImg, aux, addr writeCount, NULL
-    jmp read_write_loop
+    jmp label_name
 
 censor:
-    cmp x, 480
+    cmp countX, 1440
     je write_file
     mov ebx, offset lineImg
     mov al, 0
-    mov edx, x
+    mov edx, countX
+    ;mov edx, ecx
     mov [ebx][edx], al
     ;mov [ebx][edx+1], al
     ;mov [ebx][edx+2], al
-    add x, 1
+    add countX, 1
+    jmp censor
+
+label_name:
+    cmp countY, 340
+    je read_final
+    add countY, 1
+    mov countX, 750
+    invoke ReadFile, fileHandle, addr lineImg, aux, addr readCount, NULL
     jmp censor
 
 read_final:
@@ -147,7 +154,6 @@ read_final:
     invoke WriteFile, writeHandle, addr lineImg, aux, addr writeCount, NULL
     jmp read_final
 
-        
 exit_program:
    
     invoke CloseHandle, fileHandle

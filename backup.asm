@@ -28,4 +28,29 @@ read_final:
     invoke WriteFile, writeHandle, addr lineImg, aux, addr writeCount, NULL
     jmp read_final
     
+y_loop:
+   ;invoke WriteConsole, outputHandle, addr fileName, sizeof fileName, addr consoleCount, NULL
+   cmp y, 30
+   je read_final
+   invoke ReadFile, fileHandle, addr lineImg, aux, addr readCount, NULL
+   mov ecx, y
+   mov eax, offset lineImg
+   mov ebx, [eax][ecx]
+   ;printf("entrou aqui")
+   jmp censor
+
+censor:
+    cmp x, 480
+    je write_file  
+    mov al, 0
+    mov edx, x
+    mov [ebx][edx], al
+    ;mov byte ptr [ebx+edx], al
+    add x, 1
+    jmp censor
+    
+write_file:
+    invoke WriteFile, writeHandle, addr lineImg, aux, addr writeCount, NULL
+    sub y, 1
+    jmp y_loop
 
