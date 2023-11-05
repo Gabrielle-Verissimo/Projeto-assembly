@@ -1,3 +1,5 @@
+;Nome: EMILLY EDUARDA CAROLINY SILVA
+;Matricula: 20220166942
 .686
 .model flat, stdcall
 option casemap:none
@@ -9,7 +11,6 @@ include \masm32\include\masm32.inc
 includelib \masm32\lib\kernel32.lib
 includelib \masm32\lib\msvcrt.lib
 includelib \masm32\lib\masm32.lib
-include \masm32\macros\macros.asm
 
 .data
     inputHandle dd 0
@@ -21,6 +22,10 @@ include \masm32\macros\macros.asm
     readHandle dd 0
     fileHandle dd 0
     eighteenBytes db 18 dup(0)
+    printX db "Digite um valor para x:", 0
+    printY db "Digite um valor para y:", 0
+    printWidth db "Digite um valor para a largura:", 0
+    printHeight db "Digite um valor para a altura:", 0
     widthImg dd 0
     finalHeader db 32 dup(0)
     lineImg db 6480 dup(0)
@@ -29,30 +34,45 @@ include \masm32\macros\macros.asm
     newFile db 20 dup(0)
     newFilePrint db "Nome do arquivo novo:", 0 
     writeCount dd 0
-    widthInput db 4 dup(0)
-    heightInput db 5 dup(0)
-    widthDD dd 0
-    heightDD dd 0
-    x db 4 dup(0)
-    y db 4 dup(0)
-    coordinateX dd 0
-    coordinateY dd 0
-    sizeLineImg dd 0
+    widthInput db 7 dup(0) ; recebe a entrada da largura
+    heightInput db 7 dup(0) ; recebe a entrada da altura
+    widthDD dd 0 ; armazena a entrada da largura convertida para dd
+    heightDD dd 0 ; armazena a entrada da altura convertida para dd
+    x db 7 dup(0) ; recebe a entrada da coordenada x 
+    y db 7 dup(0) ; recebe a entrada da coordenada y
+    coordinateX dd 0 ; armazena a entrada da coordenada x convertida para dd
+    coordinateY dd 0 ; armazena a entrada da coordenada y convertida para dd
+    sizeLineImg dd 0 ; armazena o tamanho de uma linha da imagem
     widthTotal dd 0
-    heightCopy dd 0
-    heightTotal dd 0
+    heightTotal dd 0 ; armazena a soma da coordenada y com a altura
+    heightCopy dd 0 ; recebe uma copia da coordenada y
+    
 .code
     ;Funcao de censura
     censor:
         ; Verificar se atingimos o fim da largura
         push ebp
         mov ebp, esp
-        
-        mov eax, DWORD PTR [ebp+16]
+        sub esp, 4
 
+        ; Soma widthDD com coordinateX e multiplica por 3 e armazena a largura total em ebp-4
+        mov ebx, DWORD PTR [ebp+16]
+        add ebx, DWORD PTR [ebp+12]
+        mov DWORD PTR [ebp-4], ebx
+        mov eax, 3
+        mul DWORD PTR [ebp-4]
+        mov DWORD PTR [ebp-4], eax
+
+        ; Multiplica coordinateX por 3
+        mov eax, 3
+        mul DWORD PTR [ebp+12]
+        mov DWORD PTR [ebp+12], eax
+
+        mov eax, DWORD PTR [ebp-4] ; eax recebe a largura total
+        
         paint:
             ; Preencher com a cor preta (0, 0, 0) no padrao RGB
-            cmp  DWORD PTR [ebp+12], eax
+            cmp DWORD PTR [ebp+12], eax
             je return_func
             mov ebx, [ebp+8]
             mov ecx, DWORD PTR [ebp+12]
@@ -78,8 +98,15 @@ start:
     invoke WriteConsole, outputHandle, addr filePrint, 20, addr consoleCount, NULL
     invoke ReadConsole, inputHandle, addr fileName, sizeof fileName, addr consoleCount, NULL
 
-    invoke WriteConsole, outputHandle, addr printInfo, 61, addr consoleCount, NULL
+    invoke WriteConsole, outputHandle, addr printX, 24, addr consoleCount, NULL
     invoke ReadConsole, inputHandle, addr x, sizeof x, addr consoleCount, NULL
+    invoke WriteConsole, outputHandle, addr printY, 24, addr consoleCount, NULL
+    invoke ReadConsole, inputHandle, addr y, sizeof y, addr consoleCount, NULL
+    invoke WriteConsole, outputHandle, addr printWidth, 32, addr consoleCount, NULL
+    invoke ReadConsole, inputHandle, addr widthInput, sizeof widthInput, addr consoleCount, NULL
+    invoke WriteConsole, outputHandle, addr printHeight, 31, addr consoleCount, NULL
+    invoke ReadConsole, inputHandle, addr heightInput, sizeof heightInput, addr consoleCount, NULL
+    
     mov esi, offset x ; Armazenar apontador da string em esi
 clear_x:
     mov al, [esi] ; Mover caracter atual para al
@@ -95,8 +122,7 @@ convert_x:
     mov [esi], al ; Inserir NULL logo apos o termino do numero
     invoke atodw, addr x
     mov coordinateX, eax
-   
-    invoke ReadConsole, inputHandle, addr y, sizeof y, addr consoleCount, NULL
+
     mov esi, offset y
 clear_y:
     mov al, [esi]
@@ -113,7 +139,6 @@ convert_y:
     invoke atodw, addr y
     mov coordinateY, eax
 
-    invoke ReadConsole, inputHandle, addr widthInput, sizeof widthInput, addr consoleCount, NULL
     mov esi, offset widthInput
 clear_width:
     mov al, [esi]
@@ -130,7 +155,6 @@ convert_width:
     invoke atodw, addr widthInput
     mov widthDD, eax
 
-    invoke ReadConsole, inputHandle, addr heightInput, sizeof heightInput, addr consoleCount, NULL
     mov esi, offset heightInput
 clear_height:
     mov al, [esi]
@@ -188,18 +212,10 @@ clear_new_file:
     invoke WriteFile, writeHandle, addr widthImg, 4, addr writeCount, NULL
     invoke WriteFile, writeHandle, addr finalHeader, 32, addr writeCount, NULL
     
-    ;multiplica o widht por 3 (pixel equivalente a 3 bytes)
+    ;multiplica o widthImg por 3 (pixel equivalente a 3 bytes)
     mov eax, 3
     mul widthImg
     mov sizeLineImg, eax
-    
-    ;soma width com coordenada x e multiplica por 3
-    mov ebx, widthDD
-    add ebx, coordinateX
-    mov widthTotal, ebx
-    mov eax, 3
-    mul widthTotal
-    mov widthTotal, eax
     
     ;soma altura com coordenada y
     mov edx, heightDD
@@ -209,31 +225,23 @@ clear_new_file:
     ;faz uma copia da coordenada y para a variavel heighcopy
     mov ecx, coordinateY
     mov heightCopy, ecx
-    
-    ;multiplica coordenada x por 3
-    mov eax, 3
-    mul coordinateX
-    mov coordinateX, eax
    
-;ler as linhas que não serão alteradas até encontrar a que será alterada e então desviará para o begin_censor
+;ler as linhas que nao serao alteradas ate encontrar a que sera� alterada e entao desviara para o begin_censor
 read_write_loop:
     cmp coordinateY, 0
     je begin_censor
-
-    ;Ler uma linha da imagem
     invoke ReadFile, fileHandle, addr lineImg, sizeLineImg, addr readCount, NULL
     invoke WriteFile, writeHandle, addr lineImg, sizeLineImg, addr writeCount, NULL
     sub coordinateY, 1
     jmp read_write_loop
 
-;loop onde chama a funcao de censura até que chegue na altura total que foi informada
+;loop onde chama a funcao de censura ate que chegue na altura total
 begin_censor:
-    ;Ler uma linha da imagem
     invoke ReadFile, fileHandle, addr lineImg, sizeLineImg, addr readCount, NULL
     mov edx, heightTotal
     cmp heightCopy, edx
     je read_final
-    push widthTotal
+    push widthDD
     push coordinateX 
     push offset lineImg
     call censor
