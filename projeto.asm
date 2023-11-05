@@ -12,15 +12,14 @@ includelib \masm32\lib\masm32.lib
 include \masm32\macros\macros.asm
 
 .data
-    inputHandle dd 0 ; Variavel para armazenar o handle de entrada
-    outputHandle dd 0 ; Variavel para armazenar o handle de saida
-    consoleCount dd 0 ; Variavel para armazenar caracteres lidos/escritos na console
+    inputHandle dd 0
+    outputHandle dd 0
+    consoleCount dd 0
     fileName db 20 dup(0)
     filePrint db "Arquivo de entrada:", 0
     printInfo db "Digite um valor para x, y, largura e altura respectivamente:", 0
     readHandle dd 0
     fileHandle dd 0
-    headerBuffer db 54 dup(0)
     eighteenBytes db 18 dup(0)
     widthImg dd 0
     finalHeader db 32 dup(0)
@@ -100,63 +99,63 @@ convert_x:
     invoke ReadConsole, inputHandle, addr y, sizeof y, addr consoleCount, NULL
     mov esi, offset y
 clear_y:
-    mov al, [esi] ; Mover caracter atual para al
-    inc esi ; Apontar para o proximo caracter
-    cmp al, 48 ; Verificar se menor que ASCII 48 - FINALIZAR
+    mov al, [esi]
+    inc esi
+    cmp al, 48
     jl convert_y
-    cmp al, 58 ; Verificar se menor que ASCII 58 - CONTINUAR
+    cmp al, 58
     jl clear_y
 ; Converte y de string para inteiro
 convert_y:
-    dec esi ; Apontar para caracter anterior
-    xor al, al ; 0 ou NULL
-    mov [esi], al ; Inserir NULL logo apos o termino do numero
+    dec esi
+    xor al, al
+    mov [esi], al
     invoke atodw, addr y
     mov coordinateY, eax
 
     invoke ReadConsole, inputHandle, addr widthInput, sizeof widthInput, addr consoleCount, NULL
     mov esi, offset widthInput
 clear_width:
-    mov al, [esi] ; Mover caracter atual para al
-    inc esi ; Apontar para o proximo caracter
-    cmp al, 48 ; Verificar se menor que ASCII 48 - FINALIZAR
+    mov al, [esi]
+    inc esi
+    cmp al, 48
     jl convert_width
-    cmp al, 58 ; Verificar se menor que ASCII 58 - CONTINUAR
+    cmp al, 58
     jl clear_width
 ; Converte width de string para inteiro
 convert_width:
-    dec esi ; Apontar para caracter anterior
-    xor al, al ; 0 ou NULL
-    mov [esi], al ; Inserir NULL logo apos o termino do numero
+    dec esi
+    xor al, al
+    mov [esi], al
     invoke atodw, addr widthInput
     mov widthDD, eax
 
     invoke ReadConsole, inputHandle, addr heightInput, sizeof heightInput, addr consoleCount, NULL
     mov esi, offset heightInput
 clear_height:
-    mov al, [esi] ; Mover caracter atual para al
-    inc esi ; Apontar para o proximo caracter
-    cmp al, 48 ; Verificar se menor que ASCII 48 - FINALIZAR
+    mov al, [esi]
+    inc esi
+    cmp al, 48
     jl convert_height
-    cmp al, 58 ; Verificar se menor que ASCII 58 - CONTINUAR
+    cmp al, 58
     jl clear_height
 ; Converte height de string para inteiro
 convert_height:
-    dec esi ; Apontar para caracter anterior
-    xor al, al ; 0 ou NULL
-    mov [esi], al ; Inserir NULL logo apos o termino do numero
+    dec esi
+    xor al, al
+    mov [esi], al
     invoke atodw, addr heightInput
     mov heightDD, eax
     
-    mov esi, offset fileName ; Armazenar apontador da string em esi
+    mov esi, offset fileName
 clear_file:
-    mov al, [esi] ; Mover caractere atual para al
-    inc esi ; Apontar para o proximo caractere
-    cmp al, 13 ; Verificar se eh o caractere ASCII CR - FINALIZAR
+    mov al, [esi]
+    inc esi
+    cmp al, 13
     jne clear_file
-    dec esi ; Apontar para caractere anterior
-    xor al, al ; ASCII 0
-    mov [esi], al ; Inserir ASCII 0 no lugar do ASCII CR
+    dec esi
+    xor al, al
+    mov [esi], al
 
     ;;; Abre o arquivo ;;;
     invoke CreateFile, addr fileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
@@ -170,15 +169,15 @@ clear_file:
     invoke ReadConsole, inputHandle, addr newFile, sizeof newFile, addr consoleCount, NULL
  
 
-mov esi, offset newFile ; Armazenar apontador da string em esi
+mov esi, offset newFile
 clear_new_file:
-    mov al, [esi] ; Mover caractere atual para al
-    inc esi ; Apontar para o proximo caractere
-    cmp al, 13 ; Verificar se eh o caractere ASCII CR - FINALIZAR
+    mov al, [esi]
+    inc esi
+    cmp al, 13
     jne clear_new_file
-    dec esi ; Apontar para caractere anterior
-    xor al, al ; ASCII 0
-    mov [esi], al ; Inserir ASCII 0 no lugar do ASCII CR
+    dec esi
+    xor al, al
+    mov [esi], al
 
 
     invoke CreateFile, addr newFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL ; cria um novo arquivo para escrita
