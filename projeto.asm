@@ -43,7 +43,6 @@ includelib \masm32\lib\masm32.lib
     coordinateX dd 0 ; armazena a entrada da coordenada x convertida para dd
     coordinateY dd 0 ; armazena a entrada da coordenada y convertida para dd
     sizeLineImg dd 0 ; armazena o tamanho de uma linha da imagem
-    widthTotal dd 0
     heightTotal dd 0 ; armazena a soma da coordenada y com a altura
     heightCopy dd 0 ; recebe uma copia da coordenada y
     
@@ -226,7 +225,7 @@ clear_new_file:
     mov ecx, coordinateY
     mov heightCopy, ecx
    
-;ler as linhas que nao serao alteradas ate encontrar a que sera¡ alterada e entao desviara para o begin_censor
+;ler as linhas que nao serao alteradas ate encontrar a que seraï¿½ alterada e entao desviara para o begin_censor
 read_write_loop:
     cmp coordinateY, 0
     je begin_censor
