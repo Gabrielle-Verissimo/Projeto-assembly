@@ -1,5 +1,7 @@
 ;Nome: EMILLY EDUARDA CAROLINY SILVA
 ;Matricula: 20220166942
+;Nome: GABRIELLE DA SILVA VERISSIMO
+;Matricula: 20190096090
 .686
 .model flat, stdcall
 option casemap:none
