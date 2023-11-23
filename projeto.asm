@@ -252,10 +252,10 @@ begin_censor:
 
 ;ler as linhas que sobraram sem alteracao
 read_final:
+    invoke WriteFile, writeHandle, addr lineImg, sizeLineImg, addr writeCount, NULL
     cmp readCount, 0
     je exit_program
     invoke ReadFile, fileHandle, addr lineImg, sizeLineImg, addr readCount, NULL
-    invoke WriteFile, writeHandle, addr lineImg, sizeLineImg, addr writeCount, NULL
     jmp read_final
 
 exit_program:
